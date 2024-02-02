@@ -64,7 +64,7 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
             filesToOpen.add(files[m].getPath());
             String id = filesToOpen.get(m);
 
-            //Check it is a .czi .nd or .dv file
+            //Check it is an .ims of .tif
             if ((id.contains(".ims")||id.contains(".tif"))&& (!id.contains(".xml") && !id.contains(".zip"))) {
 
                 //Open the file get info and split channels, make z-projections
@@ -109,11 +109,6 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
                     maskRef.setTitle("maskref");
                     maskRef.show();
                     IJ.saveAs("Tiff", Paths.get(filePath, filename + "_mask_v2_4Channels.tif").toString());
-//                //IJ.run("Invert");
-//                IJ.setAutoThreshold(maskRef, "Default dark");
-//                maskRef = WindowManager.getImage("maskref");
-//                IJ.run(maskRef, "Analyze Particles...", "size=" + minCentromere + "-" + maxCentromere + " pixel circularity=" + minCircularity + "-1.00 show=Nothing exclude add");
-//                Roi[] rois = roiManager.getRoisAsArray();
 
                     //Draw boxes on the data z project and get the intensities
                     double[][] data = getData(rois, WindowManager.getImage(fileNameList[0] + "_Zproj"), WindowManager.getImage(fileNameList[3]+"_Zproj"), cellRois);
@@ -160,14 +155,12 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
         channelDialog.addNumericField(coloursArray[2], 0);
         channelDialog.addNumericField(coloursArray[3], 1);
         channelDialog.addCheckbox("Change default parameter settings?", false );
-        //channelDialog.addCheckbox("Cropped cells?", false );
         channelDialog.showDialog();
         int[] choicesArray = new int[4];
         for (int i = 0; i < 4; i++){
             choicesArray[i] = (int) channelDialog.getNextNumber();
         }
         changeParameters= channelDialog.getNextBoolean();
-        //croppedCells = channelDialog.getNextBoolean();
 
         if ((choicesArray[0]==choicesArray[2]||choicesArray[1]==choicesArray[2])){
             System.out.print("Reference and Data channels should be different from DAPI channel");
@@ -214,8 +207,6 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
             bufferedWriter.newLine();
             bufferedWriter.write ("Maximum Centromere Size: "+maxCentromere);
             bufferedWriter.newLine();
-            // bufferedWriter.write("Threshold Factor: "+thresholdFactor);
-            // bufferedWriter.newLine();
             bufferedWriter.write("Chromatic aberration correction: ("+caHor+","+caVer+") [(x,y) difference of reference compared to data]");
             bufferedWriter.newLine();
             bufferedWriter.newLine();
@@ -236,7 +227,6 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
         parameterDialog.addNumericField("Max Feret's Diameter",7,1,3,"pixels");
         parameterDialog.addNumericField("Min Centromere Size",4,0,2,"pixel");
         parameterDialog.addNumericField("Max Centromere Size",35,0,2,"pixel");
-        //parameterDialog.addNumericField("Threshold Factor",1,2,4,"pixel intensity");
         parameterDialog.addMessage("\nIf known, set the chromatic aberration of the reference channel compared to the data channel.");
         parameterDialog.addNumericField("Chromatic aberration (horizontal): ",0,0,2,"pixels to right");
         parameterDialog.addNumericField("Chromatic aberration (vertical): ",0,0,2,"pixels down");
@@ -248,7 +238,7 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
         maxFeret = parameterDialog.getNextNumber();
         minCentromere = parameterDialog.getNextNumber();
         maxCentromere = parameterDialog.getNextNumber();
-        //thresholdFactor = parameterDialog.getNextNumber();
+
         caHor = parameterDialog.getNextNumber();
         caVer = parameterDialog.getNextNumber();
 
@@ -274,10 +264,6 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
         ImagePlus blur5 = WindowManager.getCurrentImage();
         IJ.run("Gaussian Blur...", "sigma=5");
 
-
-        //ImageCalculator calc = new ImageCalculator();
-        //ImagePlus subtraction = calc.run( "Subtract create", blur5, blur);
-
         IJ.setAutoThreshold(blur5, "Huang dark");
         IJ.run(blur5, "Analyze Particles...", "show=Masks");
         IJ.run("Watershed");
@@ -295,26 +281,6 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
         return mask;
     }
 
-    //Takes the mask from the dapi channel and applies it to the reference channel, returns a masked image with no
-    // intensity outside of the masked nucleii
-    private ImagePlus makeRefMask(ImagePlus ref, ImagePlus dapimask) {
-        dapimask.show();
-        IJ.run("Duplicate...", "title=dapimask");
-        ref.show();
-        IJ.run(ref, "Duplicate...", "title=refblur25");
-        IJ.selectWindow("refblur25");
-        ImagePlus refblur = WindowManager.getCurrentImage();
-        IJ.run("Gaussian Blur...", "sigma=25");
-
-
-        ImageCalculator calc = new ImageCalculator();
-        ImagePlus refMask = calc.run( "Subtract create", ref, refblur);
-
-        //ImageCalculator calc2 = new ImageCalculator();
-        //ImagePlus refMask = calc2.run("AND create",subtraction, dapimask);
-        //IJ.run("Invert");
-        return refMask;
-    }
 
     //Takes the Dapi mask image and applies a threshold then uses analyse particles to return ROI outlines of the nucleii
     public Roi[] getCellRois(ImagePlus Dapi){
@@ -352,10 +318,8 @@ public class EndogenousCentromeres_Intensity implements PlugIn {
             Font font = new Font("SansSerif", Font.BOLD, 10);
             ip.setFont(font);
             ip.setColor(Color.white);
-            //String cellnumber = String.valueOf(j+1);
             int xpos = (int) centromeres[j].getContourCentroid()[0];
             int ypos = (int) centromeres[j].getContourCentroid()[1];
-            //ip.drawString(cellnumber, xpos, ypos);
             ip.draw(centromeres[j]);
             draw.updateAndDraw();
         }

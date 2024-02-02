@@ -64,7 +64,7 @@ public class CenpA_SNAP_2024 implements PlugIn {
             filesToOpen.add(files[m].getPath());
             String id = filesToOpen.get(m);
 
-            //Check it is a .czi .nd or .dv file
+            //Check it is an .ims or .tif
             if ((id.contains(".ims")||id.contains(".tif"))&& (!id.contains(".xml") && !id.contains(".zip"))) {
 
                 //Open the file get info and split channels, make z-projections
@@ -75,6 +75,8 @@ public class CenpA_SNAP_2024 implements PlugIn {
                 scale = imp.getCalibration().pixelWidth;
                 new ChannelSplitter();
                 ImagePlus[] channels = ChannelSplitter.split(imp);
+
+                //Check the file has 4 channels
                 if (channels.length == 4) {
                     for (int i = 0; i < channels.length; i++) {
                         IJ.run(channels[i], "Z Project...", "projection=[Max Intensity]");
@@ -96,7 +98,6 @@ public class CenpA_SNAP_2024 implements PlugIn {
 
                     //Make the DAPI and Reference image masks
                     ImagePlus maskDAPI = makeDAPImask(WindowManager.getImage(fileNameList[2] + "_Zproj"));
-                    //ImagePlus maskRef = makeRefMask(WindowManager.getImage(fileNameList[1] + "_Zproj"), maskDAPI);
                     ImagePlus maskRef = WindowManager.getImage(fileNameList[1] + "_Zproj");
 
                     //Get Outlines of nucleii, label them and draw onto the composite image, save the image
@@ -109,12 +110,7 @@ public class CenpA_SNAP_2024 implements PlugIn {
                     maskRef.setTitle("maskref");
                     maskRef.show();
                     IJ.saveAs("Tiff", Paths.get(filePath, filename + "_mask_v2.tif").toString());
-//                //IJ.run("Invert");
-//                IJ.setAutoThreshold(maskRef, "Default dark");
-//                maskRef = WindowManager.getImage("maskref");
-//                IJ.run(maskRef, "Analyze Particles...", "size=" + minCentromere + "-" + maxCentromere + " pixel circularity=" + minCircularity + "-1.00 show=Nothing exclude add");
-//                Roi[] rois = roiManager.getRoisAsArray();
-
+//
                     //Draw boxes on the data z project and get the intensities
                     double[][] data = getData(rois, WindowManager.getImage(fileNameList[0] + "_Zproj"), cellRois);
 
@@ -131,7 +127,6 @@ public class CenpA_SNAP_2024 implements PlugIn {
                 //Reset roi manager and close all windows
                 roiManager.reset();
                 IJ.run("Close All", "");
-
 
             }
         }
@@ -272,16 +267,12 @@ public class CenpA_SNAP_2024 implements PlugIn {
         ImagePlus blur5 = WindowManager.getCurrentImage();
         IJ.run("Gaussian Blur...", "sigma=5");
 
-
-        //ImageCalculator calc = new ImageCalculator();
-        //ImagePlus subtraction = calc.run( "Subtract create", blur5, blur);
-
         IJ.setAutoThreshold(blur5, "Huang dark");
         IJ.run(blur5, "Analyze Particles...", "show=Masks");
         IJ.run("Watershed");
         IJ.run("Erode");
         IJ.run( "Analyze Particles...", "size= 50-Infinity show=Masks");
-        //IJ.run("Invert");
+
         IJ.run("16-bit");
         IJ.run("Multiply...", "value=257.000");
         IJ.run("Invert");
@@ -291,27 +282,6 @@ public class CenpA_SNAP_2024 implements PlugIn {
         blur5.changes=false;
         blur5.close();
         return mask;
-    }
-
-    //Takes the mask from the dapi channel and applies it to the reference channel, returns a masked image with no
-    // intensity outside of the masked nucleii
-    private ImagePlus makeRefMask(ImagePlus ref, ImagePlus dapimask) {
-        dapimask.show();
-        IJ.run("Duplicate...", "title=dapimask");
-        ref.show();
-        IJ.run(ref, "Duplicate...", "title=refblur25");
-        IJ.selectWindow("refblur25");
-        ImagePlus refblur = WindowManager.getCurrentImage();
-        IJ.run("Gaussian Blur...", "sigma=25");
-
-
-        ImageCalculator calc = new ImageCalculator();
-        ImagePlus refMask = calc.run( "Subtract create", ref, refblur);
-
-        //ImageCalculator calc2 = new ImageCalculator();
-        //ImagePlus refMask = calc2.run("AND create",subtraction, dapimask);
-        //IJ.run("Invert");
-        return refMask;
     }
 
     //Takes the Dapi mask image and applies a threshold then uses analyse particles to return ROI outlines of the nucleii
@@ -350,10 +320,8 @@ public class CenpA_SNAP_2024 implements PlugIn {
             Font font = new Font("SansSerif", Font.BOLD, 10);
             ip.setFont(font);
             ip.setColor(Color.white);
-            //String cellnumber = String.valueOf(j+1);
             int xpos = (int) centromeres[j].getContourCentroid()[0];
             int ypos = (int) centromeres[j].getContourCentroid()[1];
-            //ip.drawString(cellnumber, xpos, ypos);
             ip.draw(centromeres[j]);
             draw.updateAndDraw();
         }
