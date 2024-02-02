@@ -1,4 +1,4 @@
-# CenpA_SNAP_2024
+# Centromere_Quantifications_JPLab
 
 Plugins for quantification of centromeric signal adapted from the CRaQ Macro (1) 
 
