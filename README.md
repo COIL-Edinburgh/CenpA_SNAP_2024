@@ -8,10 +8,10 @@ Save the CenpA_SNAP_2024.class and/or EndogenousCentromeres_Intensity.class file
 
 USAGE
 
-- Select the plugin, if you want to analyse just one (Data) channel use CenpA_SNAP_2024 or two data channes use EndogenousCentromere_Intensity.
+- Select the plugin from the Plugins drop down menu. If you want to analyse just one data channel use CenpA_SNAP_2024 or two data channels use EndogenousCentromere_Intensity.
 - The plugin will ask for an input folder and open all .tif or .ims files in the selected folder
 - If the opened file has 4 channels a Maximum Z-Projection is performed. For the first file in the folder a dialog box will
-appear asking for the channel number (0-3) for the Data, Reference, DAPI and other Channels. There is the option at this stage to edit the default parameter settings.
+appear asking for the channel number (0-3) for the Data, Reference, DAPI and Other Channel. There is the option at this stage to edit the default parameter settings.
 - Default parameter settings are:
   - Square Size = 7 pixels
   - Minimum Circularity = 0.95 au
@@ -22,7 +22,7 @@ appear asking for the channel number (0-3) for the Data, Reference, DAPI and oth
 - The plugin then for each file:
   - Creates a mask of the DAPI channel to identify cell ROIs
   - Creates a mask of the Reference Channel to identify Centromere ROIs (using parameter settings to filter centromere ROIs)
-  - Draws a Square (of size set in parameters) ROI around each Centromere ROI and returns the cell the roi is associated with and the max-min intensity in that region in the data channel (and in the 'other' channel for the EndogenousCentromere_Intensity plugin).
+  - Draws a Square (of size set in parameters) ROI around each Centromere ROI and returns the cell the ROI is associated with and the max-min intensity in that region in the data channel (and in the 'other' channel for the EndogenousCentromere_Intensity plugin).
 
 OUTPUT
 - An OUTPUT.csv file with the cell and intensity data for each image analysed
